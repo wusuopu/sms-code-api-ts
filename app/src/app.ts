@@ -1,4 +1,5 @@
 import "./alias";
+import "@/config";
 import express, { Errback, Request, Response } from 'express';
 import expressWinston from 'express-winston';
 import bodyParser from 'body-parser'

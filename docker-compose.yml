@@ -1,6 +1,13 @@
 version: "2"
 
 services:
+  redis:
+    image: redis:5.0.0
+    expose:
+      - "6379"
+    volumes:
+      - ./tmp/redis:/data
+
   app:
     image: node:16.13-alpine
     expose:
