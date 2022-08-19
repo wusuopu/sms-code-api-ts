@@ -8,7 +8,7 @@
     "start": "cross-env NODE_ENV=production node dist/src/server.js",
     "dev": "cross-env NODE_ENV=development ts-node-dev src/server.ts",
     "build": "rm -rf dist/ && tsc",
-    "test": "cross-env NODE_ENV=test jest --forceExit --detectOpenHandles",
+    "test": "cross-env NODE_ENV=test jest --forceExit --detectOpenHandles --runInBand",
     "lint": "eslint --ignore-path .gitignore --ext .ts src/",
     "lint:fix": "npm run lint -- --fix"
   },
@@ -39,6 +39,7 @@
     "@types/jest": "^28.1.6",
     "@types/lodash": "^4.14.183",
     "@types/node": "^17.0.45",
+    "@types/sinon": "^10.0.13",
     "@types/supertest": "^2.0.12",
     "@typescript-eslint/eslint-plugin": "^5.29.0",
     "@typescript-eslint/parser": "^5.29.0",

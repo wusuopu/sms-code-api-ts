@@ -8,15 +8,21 @@ describe('SMSCode', () => {
   const mobile2 = '13012345679'
   const mobile3 = '13012345670'
 
+  beforeAll(async () => {
+    await SMSCode.clearTimestamp(mobile1)
+    await SMSCode.clearTimestamp(mobile2)
+    await SMSCode.clearTimestamp(mobile3)
+    await SMSCode.clearCode(mobile1)
+    await SMSCode.clearCode(mobile2)
+    await SMSCode.clearCode(mobile3)
+  })
+  afterAll(async () => {
+    await SMSCode.clearTimestamp(mobile1)
+    await SMSCode.clearTimestamp(mobile2)
+    await SMSCode.clearTimestamp(mobile3)
+  })
+
   describe('generateCode', () => {
-    beforeAll(async () => {
-      await cache.del(`timestamp:${mobile1}`)
-      await cache.del(`timestamp:${mobile2}`)
-      await cache.del(`timestamp:${mobile3}`)
-      await cache.del(`code:${mobile1}:*`)
-      await cache.del(`code:${mobile2}:*`)
-      await cache.del(`code:${mobile3}:*`)
-    })
     it('生成验证码失败 - 两次生成的时间间隔太短', async () => {
       await SMSCode.generateCode(mobile1)
       expect(SMSCode.generateCode(mobile1)).rejects.toBeDefined()

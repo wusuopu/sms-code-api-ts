@@ -3,7 +3,7 @@ import os from "os";
 import { join } from 'path';
 import winston from 'winston';
 import winstonDaily from 'winston-daily-rotate-file';
-import { ROOT_PATH } from '@/config';
+import config, { ROOT_PATH } from '@/config';
 
 // logs dir
 const logDir: string = join(ROOT_PATH, 'tmp/logs');
@@ -32,9 +32,9 @@ const logger = winston.createLogger({
     // error log setting
     new winstonDaily({
       level: 'error',
-      datePattern: 'YYYY-MM-DD',
+      datePattern: 'YYYYMMDD',
       dirname: logDir, // log file /logs/error-*.log in save
-      filename: `error-%DATE%-${os.hostname()}.log`,
+      filename: `error-${config.NODE_ENV}-%DATE%-${os.hostname()}.log`,
       maxFiles: 30, // 30 Days saved
       handleExceptions: true,
       json: false,

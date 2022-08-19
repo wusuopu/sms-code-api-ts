@@ -8,6 +8,15 @@ if (process.env.NODE_ENV === 'test') {
   config({ path: '.env' });
 }
 
+const bool = (value: string): boolean => {
+  return value?.toLowerCase() === 'true' || value === '1';
+}
+const number = (value: string, defaultValue: number|undefined): number => {
+  const ret = Number(value)
+  if (_.isNaN(ret)) { return defaultValue }
+  return ret
+}
+
 export const ROOT_PATH = path.resolve(path.join(__dirname, '../..'));
 
 const Config: any = _.pick(process.env, [
@@ -17,12 +26,13 @@ const Config: any = _.pick(process.env, [
   'ALI_API_KEY2', 'ALI_API_SECRET2', 'ALI_SMS_TEMPLATE2', 'ALI_SMS_SIGN2',
   'TENCENT_API_KEY', 'TENCENT_API_SECRET', 'TENCENT_SMS_TEMPLATE', 'TENCENT_SMS_SIGN',
   'TENCENT_API_KEY2', 'TENCENT_API_SECRET2', 'TENCENT_SMS_TEMPLATE2', 'TENCENT_SMS_SIGN2',
-  'SMS_PROVIDER', 'SMS_MOCK_ACCOUNTS', 'SMS_SANDBOX', 'SMS_TTL',
+  'SMS_PROVIDER', 'SMS_MOCK_ACCOUNTS', 'SMS_SANDBOX', 'SMS_DISABLED', 'SMS_TEMP_CODE', 'SMS_TTL',
 ]);
 Config.REDIS_KEY_PREFIX = Config.REDIS_KEY_PREFIX || '';
-Config.SMS_SANDBOX = Config.SMS_SANDBOX?.toLowerCase() === 'true'
-Config.SMS_TTL = Number(Config.SMS_TTL) || 600
-Config.SMS_INTERVAL = Number(Config.SMS_INTERVAL) || 60
+Config.SMS_SANDBOX = bool(Config.SMS_SANDBOX);
+Config.SMS_DISABLED = bool(Config.SMS_DISABLED);
+Config.SMS_TTL = number(Config.SMS_TTL, 600)
+Config.SMS_INTERVAL = number(Config.SMS_INTERVAL, 60)
 Config.NODE_ENV ||= 'production'
 
 

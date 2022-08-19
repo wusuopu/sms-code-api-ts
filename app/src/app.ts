@@ -12,7 +12,7 @@ app.use(expressWinston.logger({
   transports: [
     process.env.NODE_ENV !== 'test' ?
       new winston.transports.Console() :
-      new winston.transports.File({filename: 'test.log', dirname: '/tmp'})
+      new winston.transports.File({filename: 'test.log', dirname: 'tmp'})
   ],
   ignoredRoutes: ['/health_check'],
   meta: true,
@@ -27,7 +27,7 @@ app.use((err: ResponseError, req: Request, res: Response, next: Errback) => {
   if (res.headersSent) {
     return next(err)
   }
-  return res.status(err.statusCode || 500).json({error: err.message})
+  return res.status(err.statusCode || 500).json({errors: [err.message]})
 })
 
 app.get('/', (_: Request, res: Response) => {

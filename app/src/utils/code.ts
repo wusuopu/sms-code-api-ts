@@ -42,8 +42,17 @@ const verifyCode = async (mobile: string, code: string): Promise<boolean> => {
   return true
 }
 
+const clearTimestamp = async (mobile: string) => {
+    await cache.del(`timestamp:${mobile}`)
+}
+const clearCode = async (mobile: string) => {
+    await cache.del(`code:${mobile}:*`)
+}
+
 export default {
   randomCode,
   generateCode,
   verifyCode,
+  clearTimestamp,
+  clearCode,
 }
