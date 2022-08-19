@@ -26,14 +26,20 @@ export default {
       return res.status(200).json({success: true});
     }
 
-    const smsProvider = _.get(smsProviders, req.query.provider as string, smsProviders[config.SMS_PROVIDER])
+    const provider = req.query.provider as string || config.SMS_PROVIDER
+    const smsProvider = smsProviders[provider]
     if (!smsProvider && !config.SMS_SANDBOX) {
       return res.status(500).json({errors: ['短信服务无效'], success: false});
     }
 
     const code = await SMSCode.generateCode(req.body.mobile)
     logger.info(`[send] mobile ${req.body.mobile} code: ${code}`)
-    await smsProvider?.sendSMS(req.body.mobile, code)
+    try {
+      await smsProvider?.sendSMS(req.body.mobile, code)
+    } catch (error) {
+      logger.error(`[sendSMS] ${provider} ${req.body.mobile} ${code} ${error.message}`)
+      return res.status(500).json({errors: ['短信发送失败'], success: false});
+    }
     return res.status(200).json({success: true});
   },
   async check (req: Request, res: Response) {

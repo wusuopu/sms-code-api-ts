@@ -5,6 +5,24 @@ import config from "@/config";
 
 const SmsClient = tencentcloud.sms.v20210111.Client;
 
+let extraParam
+try {
+  extraParam = JSON.parse(config.TENCENT_SMS_TEMPLATE_PARAM_SET)
+} catch (error) {
+}
+if (!_.isArray(extraParam)) {
+  extraParam = []
+}
+
+let extraParam2
+try {
+  extraParam2 = JSON.parse(config.TENCENT_SMS_TEMPLATE_PARAM_SET2)
+} catch (error) {
+}
+if (!_.isArray(extraParam2)) {
+  extraParam2 = []
+}
+
 const sendSMS = (mobile: string, code: string, SessionContext = "") => {
   if (config.SMS_SANDBOX) { return true }
 
@@ -18,6 +36,7 @@ const sendSMS = (mobile: string, code: string, SessionContext = "") => {
   let SmsSdkAppId
   let SignName
   let TemplateId
+  let extra
   if (mobile.startsWith('+86')) {
     // 国内短信
     secretId = config.TENCENT_SECRET_ID
@@ -25,6 +44,7 @@ const sendSMS = (mobile: string, code: string, SessionContext = "") => {
     SmsSdkAppId = config.TENCENT_SMS_APP_ID
     SignName = config.TENCENT_SMS_SIGN
     TemplateId = config.TENCENT_SMS_TEMPLATE
+    extra = extraParam
   } else {
     // 国际/港澳台短信
     secretId = config.TENCENT_SECRET_ID2 || config.TENCENT_SECRET_ID
@@ -32,6 +52,11 @@ const sendSMS = (mobile: string, code: string, SessionContext = "") => {
     SmsSdkAppId = config.TENCENT_SMS_APP_ID2 || config.TENCENT_SMS_APP_ID
     SignName = config.TENCENT_SMS_SIGN2
     TemplateId = config.TENCENT_SMS_TEMPLATE2
+    extra = extraParam2
+  }
+
+  if (!secretId || !secretKey || !SmsSdkAppId || !SignName || !TemplateId) {
+    throw new Error('配置无效')
   }
 
   const client = new SmsClient({
@@ -73,9 +98,10 @@ const sendSMS = (mobile: string, code: string, SessionContext = "") => {
     // 模板 ID 可前往 [国内短信](https://console.cloud.tencent.com/smsv2/csms-template) 或 [国际/港澳台短信](https://console.cloud.tencent.com/smsv2/isms-template) 的正文模板管理查看
     TemplateId,
     /* 模板参数: 模板参数的个数需要与 TemplateId 对应模板的变量个数保持一致，若无模板参数，则设置为空 */
-    TemplateParamSet: [code],
+    TemplateParamSet: _.concat([code], extra),
     /* 下发手机号码，采用 e.164 标准，+[国家或地区码][手机号]
-     * 示例如：+8613711112222， 其中前面有一个+号 ，86为国家码，13711112222为手机号，最多不要超过200个手机号*/
+     * 示例如：+8613711112222， 其中前面有一个+号 ，86为国家码，13711112222为手机号，单次请求最多支持200个手机号且要求全为境内手机号或全为境外手机号
+     */
     PhoneNumberSet: [mobile],
     /* 用户的 session 内容（无需要可忽略）: 可以携带用户侧 ID 等上下文信息，server 会原样返回 */
     SessionContext,

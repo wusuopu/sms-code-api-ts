@@ -5,3 +5,5 @@ docker-compose*
 **/node_modules
 **/dist
 app/tmp
+doc/
+README.md
