@@ -6,4 +6,5 @@ docker-compose*
 **/dist
 app/tmp
 doc/
+tmp/
 README.md
