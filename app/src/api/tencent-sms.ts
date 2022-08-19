@@ -5,33 +5,6 @@ import config from "@/config";
 
 const SmsClient = tencentcloud.sms.v20210111.Client;
 
-const client = new SmsClient({
-  // SecretId、SecretKey 查询: https://console.cloud.tencent.com/cam/capi
-  credential: {
-    secretId: config.TENCENT_SECRET_ID,
-    secretKey: config.TENCENT_SECRET_KEY,
-  },
-  /* 必填：地域信息，可以直接填写字符串ap-guangzhou，支持的地域列表参考 https://cloud.tencent.com/document/api/382/52071#.E5.9C.B0.E5.9F.9F.E5.88.97.E8.A1.A8 */
-  region: "ap-guangzhou",
-  profile: {
-    /* SDK默认用TC3-HMAC-SHA256进行签名，非必要请不要修改这个字段 */
-    signMethod: "HmacSHA256",
-    httpProfile: {
-      /* SDK默认使用POST方法。
-       * 如果你一定要使用GET方法，可以在这里设置。GET方法无法处理一些较大的请求 */
-      reqMethod: "POST",
-      /* SDK有默认的超时时间，非必要请不要进行调整
-       * 如有需要请在代码中查阅以获取最新的默认值 */
-      reqTimeout: 30,
-      /**
-       * 指定接入地域域名，默认就近地域接入域名为 sms.tencentcloudapi.com ，也支持指定地域域名访问，例如广州地域的域名为 sms.ap-guangzhou.tencentcloudapi.com
-       */
-      endpoint: "sms.tencentcloudapi.com"
-    },
-  },
-});
-
-
 const sendSMS = (mobile: string, code: string, SessionContext = "") => {
   if (config.SMS_SANDBOX) { return true }
 
@@ -39,19 +12,66 @@ const sendSMS = (mobile: string, code: string, SessionContext = "") => {
     // 默认为国内的号码
     mobile = `+86${mobile}`
   }
+
+  let secretId
+  let secretKey
+  let SmsSdkAppId
+  let SignName
+  let TemplateId
+  if (mobile.startsWith('+86')) {
+    // 国内短信
+    secretId = config.TENCENT_SECRET_ID
+    secretKey = config.TENCENT_SECRET_KEY
+    SmsSdkAppId = config.TENCENT_SMS_APP_ID
+    SignName = config.TENCENT_SMS_SIGN
+    TemplateId = config.TENCENT_SMS_TEMPLATE
+  } else {
+    // 国际/港澳台短信
+    secretId = config.TENCENT_SECRET_ID2 || config.TENCENT_SECRET_ID
+    secretKey = config.TENCENT_SECRET_KEY2 || config.TENCENT_SECRET_KEY
+    SmsSdkAppId = config.TENCENT_SMS_APP_ID2 || config.TENCENT_SMS_APP_ID
+    SignName = config.TENCENT_SMS_SIGN2
+    TemplateId = config.TENCENT_SMS_TEMPLATE2
+  }
+
+  const client = new SmsClient({
+    // SecretId、SecretKey 查询: https://console.cloud.tencent.com/cam/capi
+    credential: {
+      secretId,
+      secretKey,
+    },
+    /* 必填：地域信息，可以直接填写字符串ap-guangzhou，支持的地域列表参考 https://cloud.tencent.com/document/api/382/52071#.E5.9C.B0.E5.9F.9F.E5.88.97.E8.A1.A8 */
+    region: "ap-guangzhou",
+    profile: {
+      /* SDK默认用TC3-HMAC-SHA256进行签名，非必要请不要修改这个字段 */
+      signMethod: "HmacSHA256",
+      httpProfile: {
+        /* SDK默认使用POST方法。
+         * 如果你一定要使用GET方法，可以在这里设置。GET方法无法处理一些较大的请求 */
+        reqMethod: "POST",
+        /* SDK有默认的超时时间，非必要请不要进行调整
+         * 如有需要请在代码中查阅以获取最新的默认值 */
+        reqTimeout: 30,
+        /**
+         * 指定接入地域域名，默认就近地域接入域名为 sms.tencentcloudapi.com ，也支持指定地域域名访问，例如广州地域的域名为 sms.ap-guangzhou.tencentcloudapi.com
+         */
+        endpoint: "sms.tencentcloudapi.com"
+      },
+    },
+  });
   /* 帮助链接：
    * 短信控制台: https://console.cloud.tencent.com/smsv2
    * 腾讯云短信小助手: https://cloud.tencent.com/document/product/382/3773#.E6.8A.80.E6.9C.AF.E4.BA.A4.E6.B5.81 */
   const params = {
     /* 短信应用ID: 短信SmsSdkAppId在 [短信控制台] 添加应用后生成的实际SmsSdkAppId，示例如1400006666 */
     // 应用 ID 可前往 [短信控制台](https://console.cloud.tencent.com/smsv2/app-manage) 查看
-    SmsSdkAppId: config.TENCENT_SMS_APP_ID,
+    SmsSdkAppId,
     /* 短信签名内容: 使用 UTF-8 编码，必须填写已审核通过的签名 */
     // 签名信息可前往 [国内短信](https://console.cloud.tencent.com/smsv2/csms-sign) 或 [国际/港澳台短信](https://console.cloud.tencent.com/smsv2/isms-sign) 的签名管理查看
-    SignName: config.TENCENT_SMS_SIGN,
+    SignName,
     /* 模板 ID: 必须填写已审核通过的模板 ID */
     // 模板 ID 可前往 [国内短信](https://console.cloud.tencent.com/smsv2/csms-template) 或 [国际/港澳台短信](https://console.cloud.tencent.com/smsv2/isms-template) 的正文模板管理查看
-    TemplateId: config.TENCENT_SMS_TEMPLATE,
+    TemplateId,
     /* 模板参数: 模板参数的个数需要与 TemplateId 对应模板的变量个数保持一致，若无模板参数，则设置为空 */
     TemplateParamSet: [code],
     /* 下发手机号码，采用 e.164 标准，+[国家或地区码][手机号]
