@@ -17,7 +17,7 @@ const number = (value: string, defaultValue: number|undefined): number => {
   return ret
 }
 
-export const ROOT_PATH = path.resolve(path.join(__dirname, '../..'));
+export const ROOT_PATH = path.resolve(process.cwd());
 
 const Config: any = _.pick(process.env, [
   'NODE_ENV',
