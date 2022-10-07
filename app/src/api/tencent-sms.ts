@@ -23,14 +23,11 @@ if (!_.isArray(extraParam2)) {
   extraParam2 = []
 }
 
-const sendSMS = (mobile: string, code: string, SessionContext = "") => {
-  if (config.SMS_SANDBOX) { return true }
-
+const createClient = (mobile: string, templateId?: string, extraArgs?: any[], signName?: string, SessionContext?: string) => {
   if (!_.startsWith(mobile, '+')) {
     // 默认为国内的号码
     mobile = `+86${mobile}`
   }
-
   let secretId
   let secretKey
   let SmsSdkAppId
@@ -54,11 +51,12 @@ const sendSMS = (mobile: string, code: string, SessionContext = "") => {
     TemplateId = config.TENCENT_SMS_TEMPLATE2
     extra = extraParam2
   }
-
+  if (templateId) { TemplateId = templateId }
+  if (signName) { SignName = signName }
+  if (!_.isNil(extraArgs)) { extra = extraArgs }
   if (!secretId || !secretKey || !SmsSdkAppId || !SignName || !TemplateId) {
     throw new Error('配置无效')
   }
-
   const client = new SmsClient({
     // SecretId、SecretKey 查询: https://console.cloud.tencent.com/cam/capi
     credential: {
@@ -87,7 +85,7 @@ const sendSMS = (mobile: string, code: string, SessionContext = "") => {
   /* 帮助链接：
    * 短信控制台: https://console.cloud.tencent.com/smsv2
    * 腾讯云短信小助手: https://cloud.tencent.com/document/product/382/3773#.E6.8A.80.E6.9C.AF.E4.BA.A4.E6.B5.81 */
-  const params = {
+  const options = {
     /* 短信应用ID: 短信SmsSdkAppId在 [短信控制台] 添加应用后生成的实际SmsSdkAppId，示例如1400006666 */
     // 应用 ID 可前往 [短信控制台](https://console.cloud.tencent.com/smsv2/app-manage) 查看
     SmsSdkAppId,
@@ -98,21 +96,48 @@ const sendSMS = (mobile: string, code: string, SessionContext = "") => {
     // 模板 ID 可前往 [国内短信](https://console.cloud.tencent.com/smsv2/csms-template) 或 [国际/港澳台短信](https://console.cloud.tencent.com/smsv2/isms-template) 的正文模板管理查看
     TemplateId,
     /* 模板参数: 模板参数的个数需要与 TemplateId 对应模板的变量个数保持一致，若无模板参数，则设置为空 */
-    TemplateParamSet: _.concat([code], extra),
+    TemplateParamSet: extra,
     /* 下发手机号码，采用 e.164 标准，+[国家或地区码][手机号]
      * 示例如：+8613711112222， 其中前面有一个+号 ，86为国家码，13711112222为手机号，单次请求最多支持200个手机号且要求全为境内手机号或全为境外手机号
      */
     PhoneNumberSet: [mobile],
     /* 用户的 session 内容（无需要可忽略）: 可以携带用户侧 ID 等上下文信息，server 会原样返回 */
-    SessionContext,
+    SessionContext: SessionContext || '',
     /* 短信码号扩展号（无需要可忽略）: 默认未开通，如需开通请联系 [腾讯云短信小助手] */
     ExtendCode: "",
     /* 国际/港澳台短信 senderid（无需要可忽略）: 国内短信填空，默认未开通，如需开通请联系 [腾讯云短信小助手] */
     SenderId: "",
   }
+
+  return { client, options }
+}
+// 发送其他类型短信
+const send = (mobile: string, templateId: string, extra: any[] = [], signName = "", SessionContext = "") => {
+  if (config.SMS_SANDBOX) { return true }
+
+  const { client, options } = createClient(mobile, templateId, extra, signName, SessionContext)
   // 通过 client 对象调用想要访问的接口，需要传入请求对象以及响应回调函数
   return new Promise((resolve, reject) => {
-    client.SendSms(params, function (err, response) {
+    client.SendSms(options, function (err, response) {
+      // 请求异常返回，打印异常信息
+      if (err) {
+        reject(err)
+        return;
+      }
+      resolve(response)
+    });
+  })
+}
+// 发送短信验证码
+const sendSMS = (mobile: string, code: string, templateId = "", SessionContext = "") => {
+  if (config.SMS_SANDBOX) { return true }
+
+  const { client, options } = createClient(mobile, templateId)
+  options.TemplateParamSet = _.concat([code], options.TemplateParamSet)
+  options.SessionContext = SessionContext
+  // 通过 client 对象调用想要访问的接口，需要传入请求对象以及响应回调函数
+  return new Promise((resolve, reject) => {
+    client.SendSms(options, function (err, response) {
       // 请求异常返回，打印异常信息
       if (err) {
         reject(err)
@@ -124,5 +149,6 @@ const sendSMS = (mobile: string, code: string, SessionContext = "") => {
 }
 
 export default {
+  send,
   sendSMS,
 }

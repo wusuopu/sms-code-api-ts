@@ -3,9 +3,9 @@ import path from "path";
 import _ from "lodash";
 
 if (process.env.NODE_ENV === 'test') {
-  config({ path: '.env.test' });
+  config({ path: path.resolve(process.cwd(), '.env.test'), override: true });
 } else {
-  config({ path: '.env' });
+  config({ path: path.resolve(process.cwd(), '.env'), override: true });
 }
 
 const bool = (value: string): boolean => {

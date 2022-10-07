@@ -6,11 +6,31 @@
   * yarn 1.22.15
 
 ## api 手册
+  * POST /v1/sms        发送特定短信
+```
+请求query:
+  provider: string;
+    要使用的短信服务： tencent | aliyun；可为空
+请求body：
+  mobile: string;
+    手机号格式 +[国家或地区码][手机号]；如：+17728000001；若未指定地区区码，默认使用国内的区码+86。
+  templateId: string;
+    要使用的短信模板
+  extra: any;
+    模板中对应的变量；若 provider 是 tencent 则需要传一个 array，若 provider 是 aliyun 则需要传一个 object
+  signName: string;
+    要使用的短信签名；可为空。
+
+返回：
+  执行成功则返回 200 状态码。
+```
   * POST /v1/sms/send   发送验证码
 ```
 请求参数：
   mobile: string;
     手机号格式 +[国家或地区码][手机号]；如：+17728000001；若未指定地区区码，默认使用国内的区码+86。
+  templateId: string; (可选)
+    要使用的短信模板
 
 返回：
   执行成功则返回 200 状态码。
