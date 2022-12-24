@@ -7,27 +7,28 @@ const randomCode = (): string => {
   return _.random(100000, 999999).toString()
 }
 // 生成验证码
-const generateCode = async (mobile: string): Promise<string> => {
+const generateCode = async (mobile: string, action = ''): Promise<string> => {
   const smsInterval = config.SMS_INTERVAL * 1000
   const now = Date.now()
-  const lastTime = Number(await cache.get(`timestamp:${mobile}`))
+  const key = `${mobile}:${action}`
+  const lastTime = Number(await cache.get(`timestamp:${key}`))
   if (lastTime && (now - lastTime) < smsInterval) {
     throw new Error(`两次发送的间隔时间不能小于 ${smsInterval}ms`)
   }
 
   const code = randomCode();
-  await cache.set(`code:${mobile}:${code}`, now.toString(), config.SMS_TTL + 5);
-  await cache.set(`timestamp:${mobile}`, now.toString(), config.SMS_TTL + 5);
+  await cache.set(`code:${key}:${code}`, now.toString(), config.SMS_TTL + 5);
+  await cache.set(`timestamp:${key}`, now.toString(), config.SMS_TTL + 5);
 
   return code
 }
 
 // 检查验证码
-const verifyCode = async (mobile: string, code: string): Promise<boolean> => {
-  const key = `code:${mobile}:${code}`
+const verifyCode = async (mobile: string, code: string, action = ''): Promise<boolean> => {
+  const key = `code:${mobile}:${action}:${code}`
   const timestamp = await cache.get(key)
   if (!timestamp) {
-    logger.error(`${mobile} 验证码 ${code} 无效`)
+    logger.error(`${mobile} ${action} 验证码 ${code} 无效`)
     return false
   }
 
@@ -35,7 +36,7 @@ const verifyCode = async (mobile: string, code: string): Promise<boolean> => {
 
   const now = Date.now()
   if ((now - Number(timestamp)) > (config.SMS_TTL * 1000)) {
-    logger.error(`${mobile} 验证码 ${code} 过期`)
+    logger.error(`${mobile} ${action} 验证码 ${code} 过期`)
     return false
   }
 
@@ -43,7 +44,7 @@ const verifyCode = async (mobile: string, code: string): Promise<boolean> => {
 }
 
 const clearTimestamp = async (mobile: string) => {
-    await cache.del(`timestamp:${mobile}`)
+    await cache.del(`timestamp:${mobile}:*`)
 }
 const clearCode = async (mobile: string) => {
     await cache.del(`code:${mobile}:*`)

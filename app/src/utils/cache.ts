@@ -43,7 +43,8 @@ export class RedisStore implements Store {
   }
   async del (key: string): Promise<boolean> {
     try {
-      await this.client.del(`${this.key_prefix}${key}`)
+      const keys = (await this.client.keys(`${this.key_prefix}${key}`)).join(' ')
+      await this.client.del(keys)
       return true
     } catch (error) {
       return false

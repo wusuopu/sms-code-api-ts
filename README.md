@@ -26,11 +26,13 @@
 ```
   * POST /v1/sms/send   发送验证码
 ```
-请求参数：
+请求body：
   mobile: string;
     手机号格式 +[国家或地区码][手机号]；如：+17728000001；若未指定地区区码，默认使用国内的区码+86。
   templateId: string; (可选)
     要使用的短信模板
+  action: string; (可选)
+    验证码的用途；对于不同用途的验证码分别验证，若不指定则是通用的。
 
 返回：
   执行成功则返回 200 状态码。
@@ -38,9 +40,11 @@
 
   * POST /v1/sms/check  检查验证码
 ```
-请求参数：
+请求body：
   mobile: string; 手机号
   code: string; 验证码
+  action: string; (可选)
+    验证码的用途；需要与调用 send api 时的一致。
 
 返回：
   执行成功则返回 200 状态码。

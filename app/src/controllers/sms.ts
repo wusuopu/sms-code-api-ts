@@ -58,7 +58,7 @@ export default {
       return res.status(500).json({errors: ['短信服务无效'], success: false});
     }
 
-    const code = await SMSCode.generateCode(req.body.mobile)
+    const code = await SMSCode.generateCode(req.body.mobile, req.body.action)
     logger.info(`[send] mobile ${req.body.mobile} code: ${code}`)
     try {
       await smsProvider?.sendSMS(req.body.mobile, code, req.body.templateId)
@@ -90,7 +90,7 @@ export default {
       return res.status(200).json({success: true});
     }
 
-    const ret = await SMSCode.verifyCode(req.body.mobile, req.body.code)
+    const ret = await SMSCode.verifyCode(req.body.mobile, req.body.code, req.body.action)
     if (!ret) {
       // 验证码不正确
       return res.status(400).json({errors: ['验证码不正确'], success: false});
